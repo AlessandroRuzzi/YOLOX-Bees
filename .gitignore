@@ -220,4 +220,4 @@ events.out.tfevents*
 # vim
 .vim
 
-*/map/input/
+/map/input/

@@ -10,13 +10,13 @@ from yolox.exp import get_exp
 
 
 class Exp(MyExp):
-    def __init__(self):
+    def __init__(self, data_dir):
         super(Exp, self).__init__()
         self.depth = 1.33
         self.width = 1.25
         self.test_size = (1920, 1080)
         self.num_classes = 1
-        self.data_dir = "datasets/bees_fro23/"
+        self.data_dir = data_dir
         self.train_ann = "train.json"
         self.val_ann = "val.json"
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]

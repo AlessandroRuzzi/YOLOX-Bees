@@ -9,6 +9,9 @@ from os import path
 import time
 from loguru import logger
 
+import importlib
+import sys
+
 import cv2
 import numpy as np
 
@@ -16,10 +19,54 @@ import torch
 
 from yolox.data.data_augment import ValTransform
 from yolox.data.datasets import COCO_CLASSES
-from yolox.exp import get_exp
 from yolox.utils import boxes, fuse_model, get_model_info, postprocess, vis
 
 #from map import map_score
+
+def get_exp_by_file(exp_file,data_dir):
+    try:
+        sys.path.append(os.path.dirname(exp_file))
+        current_exp = importlib.import_module(os.path.basename(exp_file).split(".")[0])
+        exp = current_exp.Exp(data_dir)
+    except Exception:
+        raise ImportError("{} doesn't contains class named 'Exp'".format(exp_file))
+    return exp
+
+
+def get_exp_by_name(exp_name,data_dir):
+    import yolox
+
+    yolox_path = os.path.dirname(os.path.dirname(yolox.__file__))
+    filedict = {
+        "yolox-s": "yolox_s.py",
+        "yolox-m": "yolox_m.py",
+        "yolox-l": "yolox_l.py",
+        "yolox-x": "yolox_x.py",
+        "yolox-tiny": "yolox_tiny.py",
+        "yolox-nano": "nano.py",
+        "yolov3": "yolov3.py",
+    }
+    filename = filedict[exp_name]
+    exp_path = os.path.join(yolox_path, "exps", "default", filename)
+    return get_exp_by_file(exp_path)
+
+
+def get_exp(exp_file, exp_name,data_dir):
+    """
+    get Exp object by file or name. If exp_file and exp_name
+    are both provided, get Exp by exp_file.
+
+    Args:
+        exp_file (str): file path of experiment.
+        exp_name (str): name of experiment. "yolo-s",
+    """
+    assert (
+        exp_file is not None or exp_name is not None
+    ), "plz provide exp file or exp name."
+    if exp_file is not None:
+        return get_exp_by_file(exp_file,data_dir)
+    else:
+        return get_exp_by_name(exp_name,data_dir)
 
 IMAGE_EXT = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
 
@@ -189,7 +236,7 @@ class Predictor(object):
         #print(bboxes)
 
         pred_path = str("map/input/" + str(dataset) + "/detection-results/")
-        path_dont_exist = not(path.exist(pred_path))
+        path_dont_exist = not(os.path.isdir(pred_path))
         if path_dont_exist:
             os.makedirs(pred_path, exist_ok=True)
         file_path = str("map/input/" + str(dataset) + "/detection-results/" + str(img_info["file_name"])[:-4] + ".txt")
@@ -246,13 +293,15 @@ def image_demo(predictor,exp, vis_folder, path, current_time, save_result,datase
     #        no_aug=False,
     #        cache_img=False,
     #   )
+    ground_truth_path = "map/input/" + str(dataset) 
+    ground_truth_path = os.path.join(ground_truth_path,"ground-truth/")
+    path_dont_exist = not(os.path.isdir(ground_truth_path))
+    if path_dont_exist:
+        os.makedirs(ground_truth_path, exist_ok=True)
     for i,image_name in enumerate(files):
         outputs, img_info = predictor.inference(image_name)
-        ground_truth_path = str("map/input/" + str(dataset) + "/ground-truth/")
-        path_dont_exist = not(path.exist(ground_truth_path))
         if path_dont_exist:
-            file_path = str("map/input/" + str(dataset) + "/ground-truth/" + str(img_info["file_name"])[:-4] + ".txt")
-            os.makedirs(ground_truth_path, exist_ok=True)
+            file_path = str(ground_truth_path + str(img_info["file_name"])[:-4] + ".txt")
             f1= open(file_path,"w+")
             annotations = exp.valdataset.annotations[i][0]
             #annotations = exp.dataset._dataset.annotations[i][0]
@@ -304,73 +353,76 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
             break
 
 
-def main(exp, args):
-    if not args.experiment_name:
-        args.experiment_name = exp.exp_name
-
-    file_name = os.path.join(exp.output_dir, args.experiment_name)
-    os.makedirs(file_name, exist_ok=True)
-
-    vis_folder = None
-    if args.save_result:
-        vis_folder = os.path.join(file_name, "vis_res")
-        os.makedirs(vis_folder, exist_ok=True)
-
-    if args.trt:
-        args.device = "gpu"
-
-    logger.info("Args: {}".format(args))
-
-    if args.conf is not None:
-        exp.test_conf = args.conf
-    if args.nms is not None:
-        exp.nmsthre = args.nms
-    if args.tsize is not None:
-        exp.test_size = (args.tsize, args.tsize)
-
-    model = exp.get_model()
-    logger.info("Model Summary: {}".format(get_model_info(model, exp.test_size)))
-
-    if args.device == "gpu":
-        model.cuda()
-        if args.fp16:
-            model.half()  # to FP16
-    model.eval()
-
-    if not args.trt:
-        if args.ckpt is None:
-            ckpt_file = os.path.join(file_name, "best_ckpt.pth")
-        else:
-            ckpt_file = args.ckpt
-        logger.info("loading checkpoint")
-        ckpt = torch.load(ckpt_file, map_location="cpu")
-        # load the model state dict
-        model.load_state_dict(ckpt["model"])
-        logger.info("loaded checkpoint done.")
-
-    if args.fuse:
-        logger.info("\tFusing model...")
-        model = fuse_model(model)
-
-    if args.trt:
-        assert not args.fuse, "TensorRT model is not support model fusing!"
-        trt_file = os.path.join(file_name, "model_trt.pth")
-        assert os.path.exists(
-            trt_file
-        ), "TensorRT model is not found!\n Run python3 tools/trt.py first!"
-        model.head.decode_in_inference = False
-        decoder = model.head.decode_outputs
-        logger.info("Using TensorRT to inference")
-    else:
-        trt_file = None
-        decoder = None
-
-    predictor = Predictor(
-        model, exp, COCO_CLASSES, trt_file, decoder,
-        args.device, args.fp16, args.legacy,
-    )
-    current_time = time.localtime()
+def main(args):
     for dataset in DATASETS:
+        exp = get_exp(args.exp_file, args.name, str("datasets/" + str(dataset) + "/"))
+        if not args.experiment_name:
+            args.experiment_name = exp.exp_name
+
+        file_name = os.path.join(exp.output_dir, args.experiment_name)
+        os.makedirs(file_name, exist_ok=True)
+
+        vis_folder = None
+        if args.save_result:
+            vis_folder = os.path.join(file_name, "vis_res")
+            os.makedirs(vis_folder, exist_ok=True)
+
+        if args.trt:
+            args.device = "gpu"
+
+        logger.info("Args: {}".format(args))
+
+        if args.conf is not None:
+            exp.test_conf = args.conf
+        if args.nms is not None:
+            exp.nmsthre = args.nms
+        if args.tsize is not None:
+            exp.test_size = (args.tsize, args.tsize)
+
+        model = exp.get_model()
+        logger.info("Model Summary: {}".format(get_model_info(model, exp.test_size)))
+
+        if args.device == "gpu":
+            model.cuda()
+            if args.fp16:
+                model.half()  # to FP16
+        model.eval()
+
+        if not args.trt:
+            if args.ckpt is None:
+                ckpt_file = os.path.join(file_name, "best_ckpt.pth")
+            else:
+                ckpt_file = args.ckpt
+            logger.info("loading checkpoint")
+            ckpt = torch.load(ckpt_file, map_location="cpu")
+            # load the model state dict
+            model.load_state_dict(ckpt["model"])
+            logger.info("loaded checkpoint done.")
+
+        if args.fuse:
+            logger.info("\tFusing model...")
+            model = fuse_model(model)
+
+        if args.trt:
+            assert not args.fuse, "TensorRT model is not support model fusing!"
+            trt_file = os.path.join(file_name, "model_trt.pth")
+            assert os.path.exists(
+                trt_file
+            ), "TensorRT model is not found!\n Run python3 tools/trt.py first!"
+            model.head.decode_in_inference = False
+            decoder = model.head.decode_outputs
+            logger.info("Using TensorRT to inference")
+        else:
+            trt_file = None
+            decoder = None
+
+        predictor = Predictor(
+            model, exp, COCO_CLASSES, trt_file, decoder,
+            args.device, args.fp16, args.legacy,
+        )
+        current_time = time.localtime()
+        
+        
         if args.demo == "image":
             path = str("datasets/" + str(dataset) + "/validate")
             image_demo(predictor,exp, vis_folder, path, current_time, args.save_result,dataset)
@@ -381,6 +433,6 @@ def main(exp, args):
 
 if __name__ == "__main__":
     args = make_parser().parse_args()
-    exp = get_exp(args.exp_file, args.name)
+    #exp = get_exp(args.exp_file, args.name)
 
-    main(exp, args)
+    main(args)
