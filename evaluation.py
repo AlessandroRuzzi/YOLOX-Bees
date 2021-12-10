@@ -20,8 +20,11 @@ import torch
 from yolox.data.data_augment import ValTransform
 from yolox.data.datasets import COCO_CLASSES
 from yolox.utils import boxes, fuse_model, get_model_info, postprocess, vis
-print('cwd is %s' %(os.getcwd()))
 from map.script.map import map_score
+
+IMAGE_EXT = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
+
+DATASETS = ["fro23"]
 
 def get_exp_by_file(exp_file,data_dir):
     try:
@@ -67,11 +70,6 @@ def get_exp(exp_file, exp_name,data_dir):
         return get_exp_by_file(exp_file,data_dir)
     else:
         return get_exp_by_name(exp_name,data_dir)
-
-IMAGE_EXT = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
-
-DATASETS = ["fro23"]
-
 
 def make_parser():
     parser = argparse.ArgumentParser("YOLOX Demo!")

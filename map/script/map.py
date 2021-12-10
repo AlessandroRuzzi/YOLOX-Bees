@@ -12,7 +12,7 @@ import numpy as np
 
 def map_score(dataset :str,args,path):
 
-    MINOVERLAP = 0.5 # default value (defined in the PASCAL VOC2012 challenge)
+    MINOVERLAP = 0.25 # default value (defined in the PASCAL VOC2012 challenge)
 
 
     '''
