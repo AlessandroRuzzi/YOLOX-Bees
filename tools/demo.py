@@ -8,13 +8,14 @@ import time
 from loguru import logger
 
 import cv2
+import numpy as np
 
 import torch
 
 from yolox.data.data_augment import ValTransform
 from yolox.data.datasets import COCO_CLASSES
 from yolox.exp import get_exp
-from yolox.utils import fuse_model, get_model_info, postprocess, vis
+from yolox.utils import boxes, fuse_model, get_model_info, postprocess, vis
 
 IMAGE_EXT = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
 
@@ -58,7 +59,7 @@ def make_parser():
     parser.add_argument(
         "--fp16",
         dest="fp16",
-        default=False,
+        default=True,
         action="store_true",
         help="Adopting mix precision evaluating.",
     )
@@ -110,6 +111,7 @@ class Predictor(object):
         legacy=False,
     ):
         self.model = model
+        self.exp = exp
         self.cls_names = cls_names
         self.decoder = decoder
         self.num_classes = exp.num_classes
@@ -143,6 +145,7 @@ class Predictor(object):
         img_info["raw_img"] = img
 
         ratio = min(self.test_size[0] / img.shape[0], self.test_size[1] / img.shape[1])
+        #print(self.test_size)
         img_info["ratio"] = ratio
 
         img, _ = self.preproc(img, None, self.test_size)
@@ -175,23 +178,72 @@ class Predictor(object):
         bboxes = output[:, 0:4]
 
         # preprocessing: resize
+        #print(bboxes)
         bboxes /= ratio
+        #print(bboxes)
+
+        f= open("YOLOX_outputs/yolox_bees/predictions/" + str(img_info["file_name"])[:-4] + ".txt","w+")
+        
+
+        val_loader = self.exp.get_eval_loader(
+            batch_size=4,
+            is_distributed=False,
+        )
+        #bboxes = []
+        
+        #print(annotations/img_info["ratio"])
+        bboxes1 = []
+        for i,obj in enumerate(bboxes):
+            x1 = np.max((0, obj[0]))
+            y1 = np.max((0, obj[1]))
+            x2 = obj[2]
+            y2 = obj[3]
+            #x2 = img_info["width"] - np.max((0, obj[0]))
+            
+            #y2 = img_info["height"] - np.max((0, obj[1])) 
+            #x1 = img_info["width"] - obj[2]
+            
+            #y1 = img_info["height"] - obj[3]
+            if x2 >= x1 and y2 >= y1:
+                bboxes1.append([x1, y1, x2, y2])
+            
+            f.write(str(int(output[i,6].item())) + " " + str(output[i,5].item()) + " " + str(x1.item()) + " " + str(y1.item()) + " " + str(x2.item()) + " " + str(y2.item()) + "\n")
+
+        f.close()
 
         cls = output[:, 6]
         scores = output[:, 4] * output[:, 5]
 
-        vis_res = vis(img, bboxes, scores, cls, cls_conf, self.cls_names)
+        vis_res = vis(img, bboxes1, scores, cls, cls_conf, self.cls_names)
         return vis_res
 
 
-def image_demo(predictor, vis_folder, path, current_time, save_result):
+def image_demo(predictor,exp, vis_folder, path, current_time, save_result):
     if os.path.isdir(path):
         files = get_image_list(path)
     else:
         files = [path]
     files.sort()
-    for image_name in files:
+    val_loader = exp.get_eval_loader(
+            batch_size=4,
+            is_distributed=False,
+        )
+    #train_loader = exp.get_data_loader(
+    #        batch_size=4,
+    #        is_distributed=False,
+    #        no_aug=False,
+    #        cache_img=False,
+    #   )
+    for i,image_name in enumerate(files):
         outputs, img_info = predictor.inference(image_name)
+        f1= open("YOLOX_outputs/yolox_bees/ground_truth/" + str(img_info["file_name"])[:-4] + ".txt","w+")
+        annotations = exp.valdataset.annotations[i][0]
+        #annotations = exp.dataset._dataset.annotations[i][0]
+        annotations /= img_info["ratio"]
+        for i,obj in enumerate(annotations):
+            f1.write(str(int(obj[4].item())) + " "  + str(obj[0].item()) + " " + str(obj[1].item()) + " " + str(obj[2].item()) + " " + str(obj[3].item()) + "\n")
+
+        #print(outputs)
         result_image = predictor.visual(outputs[0], img_info, predictor.confthre)
         if save_result:
             save_folder = os.path.join(
@@ -201,9 +253,7 @@ def image_demo(predictor, vis_folder, path, current_time, save_result):
             save_file_name = os.path.join(save_folder, os.path.basename(image_name))
             logger.info("Saving detection result in {}".format(save_file_name))
             cv2.imwrite(save_file_name, result_image)
-        ch = cv2.waitKey(0)
-        if ch == 27 or ch == ord("q") or ch == ord("Q"):
-            break
+       
 
 
 def imageflow_demo(predictor, vis_folder, current_time, args):
@@ -304,9 +354,10 @@ def main(exp, args):
     )
     current_time = time.localtime()
     if args.demo == "image":
-        image_demo(predictor, vis_folder, args.path, current_time, args.save_result)
+        image_demo(predictor,exp, vis_folder, args.path, current_time, args.save_result)
     elif args.demo == "video" or args.demo == "webcam":
         imageflow_demo(predictor, vis_folder, current_time, args)
+
 
 
 if __name__ == "__main__":

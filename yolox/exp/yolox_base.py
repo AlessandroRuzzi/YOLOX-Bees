@@ -33,8 +33,8 @@ class Exp(BaseExp):
         # You can uncomment this line to specify a multiscale range
         # self.random_size = (14, 26)
         self.data_dir = None
-        self.train_ann = "instances_train2017.json"
-        self.val_ann = "instances_val2017.json"
+        self.train_ann = ""
+        self.val_ann = ""
 
         # --------------- transform config ----------------- #
         self.mosaic_prob = 1.0
@@ -65,7 +65,7 @@ class Exp(BaseExp):
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
         # -----------------  testing config ------------------ #
-        self.test_size = (640, 640)
+        self.test_size = (1920, 1080)
         self.test_conf = 0.01
         self.nmsthre = 0.65
 
@@ -112,6 +112,7 @@ class Exp(BaseExp):
                 data_dir=self.data_dir,
                 json_file=self.train_ann,
                 img_size=self.input_size,
+                name="train",
                 preproc=TrainTransform(
                     max_labels=50,
                     flip_prob=self.flip_prob,
@@ -242,11 +243,13 @@ class Exp(BaseExp):
 
         valdataset = COCODataset(
             data_dir=self.data_dir,
-            json_file=self.val_ann if not testdev else "image_info_test-dev2017.json",
-            name="val2017" if not testdev else "test2017",
+            json_file=self.val_ann,
+            name="val",
             img_size=self.test_size,
             preproc=ValTransform(legacy=legacy),
         )
+
+        self.valdataset = valdataset
 
         if is_distributed:
             batch_size = batch_size // dist.get_world_size()
