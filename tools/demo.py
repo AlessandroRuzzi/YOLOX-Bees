@@ -4,6 +4,8 @@
 
 import argparse
 import os
+import os.path
+from os import path
 import time
 from loguru import logger
 
@@ -17,7 +19,11 @@ from yolox.data.datasets import COCO_CLASSES
 from yolox.exp import get_exp
 from yolox.utils import boxes, fuse_model, get_model_info, postprocess, vis
 
+#from map import map_score
+
 IMAGE_EXT = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
+
+DATASETS = ["fro23"]
 
 
 def make_parser():
@@ -168,7 +174,7 @@ class Predictor(object):
             logger.info("Infer time: {:.4f}s".format(time.time() - t0))
         return outputs, img_info
 
-    def visual(self, output, img_info, cls_conf=0.35):
+    def visual(self, output, img_info, dataset,cls_conf=0.35,):
         ratio = img_info["ratio"]
         img = img_info["raw_img"]
         if output is None:
@@ -182,7 +188,13 @@ class Predictor(object):
         bboxes /= ratio
         #print(bboxes)
 
-        f= open("YOLOX_outputs/yolox_bees/predictions/" + str(img_info["file_name"])[:-4] + ".txt","w+")
+        pred_path = str("map/input/" + str(dataset) + "/detection-results/")
+        path_dont_exist = not(path.exist(pred_path))
+        if path_dont_exist:
+            os.makedirs(pred_path, exist_ok=True)
+        file_path = str("map/input/" + str(dataset) + "/detection-results/" + str(img_info["file_name"])[:-4] + ".txt")
+
+        f= open(file_path,"w+")
         
 
         val_loader = self.exp.get_eval_loader(
@@ -218,7 +230,7 @@ class Predictor(object):
         return vis_res
 
 
-def image_demo(predictor,exp, vis_folder, path, current_time, save_result):
+def image_demo(predictor,exp, vis_folder, path, current_time, save_result,dataset):
     if os.path.isdir(path):
         files = get_image_list(path)
     else:
@@ -236,15 +248,20 @@ def image_demo(predictor,exp, vis_folder, path, current_time, save_result):
     #   )
     for i,image_name in enumerate(files):
         outputs, img_info = predictor.inference(image_name)
-        f1= open("YOLOX_outputs/yolox_bees/ground_truth/" + str(img_info["file_name"])[:-4] + ".txt","w+")
-        annotations = exp.valdataset.annotations[i][0]
-        #annotations = exp.dataset._dataset.annotations[i][0]
-        annotations /= img_info["ratio"]
-        for i,obj in enumerate(annotations):
-            f1.write(str(int(obj[4].item())) + " "  + str(obj[0].item()) + " " + str(obj[1].item()) + " " + str(obj[2].item()) + " " + str(obj[3].item()) + "\n")
+        ground_truth_path = str("map/input/" + str(dataset) + "/ground-truth/")
+        path_dont_exist = not(path.exist(ground_truth_path))
+        if path_dont_exist:
+            file_path = str("map/input/" + str(dataset) + "/ground-truth/" + str(img_info["file_name"])[:-4] + ".txt")
+            os.makedirs(ground_truth_path, exist_ok=True)
+            f1= open(file_path,"w+")
+            annotations = exp.valdataset.annotations[i][0]
+            #annotations = exp.dataset._dataset.annotations[i][0]
+            annotations /= img_info["ratio"]
+            for i,obj in enumerate(annotations):    
+                f1.write(str(int(obj[4].item())) + " "  + str(obj[0].item()) + " " + str(obj[1].item()) + " " + str(obj[2].item()) + " " + str(obj[3].item()) + "\n")
 
         #print(outputs)
-        result_image = predictor.visual(outputs[0], img_info, predictor.confthre)
+        result_image = predictor.visual(outputs[0], img_info,dataset, predictor.confthre)
         if save_result:
             save_folder = os.path.join(
                 vis_folder, time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
@@ -353,10 +370,12 @@ def main(exp, args):
         args.device, args.fp16, args.legacy,
     )
     current_time = time.localtime()
-    if args.demo == "image":
-        image_demo(predictor,exp, vis_folder, args.path, current_time, args.save_result)
-    elif args.demo == "video" or args.demo == "webcam":
-        imageflow_demo(predictor, vis_folder, current_time, args)
+    for dataset in DATASETS:
+        if args.demo == "image":
+            path = str("datasets/" + str(dataset) + "/validate")
+            image_demo(predictor,exp, vis_folder, path, current_time, args.save_result,dataset)
+        elif args.demo == "video" or args.demo == "webcam":
+            imageflow_demo(predictor, vis_folder, current_time, args)
 
 
 
