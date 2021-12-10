@@ -20,8 +20,8 @@ import torch
 from yolox.data.data_augment import ValTransform
 from yolox.data.datasets import COCO_CLASSES
 from yolox.utils import boxes, fuse_model, get_model_info, postprocess, vis
-
-#from map import map_score
+print('cwd is %s' %(os.getcwd()))
+from map.script.map import map_score
 
 def get_exp_by_file(exp_file,data_dir):
     try:
@@ -90,6 +90,13 @@ def make_parser():
         action="store_true",
         help="whether to save the inference result of image/video",
     )
+    parser.add_argument('-na', '--no-animation', help="no animation is shown.", action="store_true")
+    parser.add_argument('-np', '--no-plot', help="no plot is shown.", action="store_true")
+    parser.add_argument('-q', '--quiet', help="minimalistic console output.", action="store_true")
+    # argparse receiving list of classes to be ignored (e.g., python main.py --ignore person book)
+    parser.add_argument('-i', '--ignore', nargs='+', type=str, help="ignore a list of classes.")
+    # argparse receiving list of classes with specific IoU (e.g., python main.py --set-class-iou person 0.7)
+    parser.add_argument('--set-class-iou', nargs='+', type=str, help="set IoU for a specific class.")
 
     # exp file
     parser.add_argument(
@@ -313,7 +320,7 @@ def image_demo(predictor,exp, vis_folder, path, current_time, save_result,datase
         result_image = predictor.visual(outputs[0], img_info,dataset, predictor.confthre)
         if save_result:
             save_folder = os.path.join(
-                vis_folder, time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
+                vis_folder,dataset, time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
             )
             os.makedirs(save_folder, exist_ok=True)
             save_file_name = os.path.join(save_folder, os.path.basename(image_name))
@@ -422,12 +429,14 @@ def main(args):
         )
         current_time = time.localtime()
         
-        
+        #map_score(dataset,args,os.getcwd())
         if args.demo == "image":
             path = str("datasets/" + str(dataset) + "/validate")
             image_demo(predictor,exp, vis_folder, path, current_time, args.save_result,dataset)
         elif args.demo == "video" or args.demo == "webcam":
             imageflow_demo(predictor, vis_folder, current_time, args)
+        
+        map_score(dataset,args,os.getcwd())
 
 
 

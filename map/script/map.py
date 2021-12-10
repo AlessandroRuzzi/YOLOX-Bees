@@ -10,19 +10,10 @@ from statistics import mean
 
 import numpy as np
 
-def map_score(dataset_name :str):
+def map_score(dataset :str,args,path):
 
     MINOVERLAP = 0.5 # default value (defined in the PASCAL VOC2012 challenge)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-na', '--no-animation', help="no animation is shown.", action="store_true")
-    parser.add_argument('-np', '--no-plot', help="no plot is shown.", action="store_true")
-    parser.add_argument('-q', '--quiet', help="minimalistic console output.", action="store_true")
-    # argparse receiving list of classes to be ignored (e.g., python main.py --ignore person book)
-    parser.add_argument('-i', '--ignore', nargs='+', type=str, help="ignore a list of classes.")
-    # argparse receiving list of classes with specific IoU (e.g., python main.py --set-class-iou person 0.7)
-    parser.add_argument('--set-class-iou', nargs='+', type=str, help="set IoU for a specific class.")
-    args = parser.parse_args()
 
     '''
         0,0 ------> x (width)
@@ -47,8 +38,9 @@ def map_score(dataset_name :str):
     # make sure that the cwd() is the location of the python script (so that every path makes sense)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    GT_PATH = os.path.join(os.getcwd(), 'input', 'ground-truth')
-    DR_PATH = os.path.join(os.getcwd(), 'input', 'detection-results')
+    GT_PATH = str(str(path) + "/map/input/" + str(dataset) +  '/ground-truth')
+    print(GT_PATH)
+    DR_PATH = str(str(path) + "/map/input/" + str(dataset) +  '/detection-results')
     # if there are no images then no animation can be shown
     IMG_PATH = os.path.join(os.getcwd(), 'input', 'images-optional')
     if os.path.exists(IMG_PATH): 
@@ -74,10 +66,10 @@ def map_score(dataset_name :str):
     if not args.no_plot:
         try:
             import matplotlib.pyplot as plt
-            draw_plot = True
+            draw_plot = False
         except ImportError:
             print("\"matplotlib\" not found, please install it to get the resulting plots.")
-            args.no_plot = True
+            args.no_plot = False
 
 
     def log_average_miss_rate(prec, rec, num_images):
@@ -339,7 +331,7 @@ def map_score(dataset_name :str):
     TEMP_FILES_PATH = ".temp_files"
     if not os.path.exists(TEMP_FILES_PATH): # if it doesn't exist already
         os.makedirs(TEMP_FILES_PATH)
-    output_files_path = "output"
+    output_files_path = str(path) + "/map/output/" + str(dataset)
     if os.path.exists(output_files_path): # if it exist already
         # reset the output directory
         shutil.rmtree(output_files_path)
