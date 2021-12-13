@@ -440,6 +440,7 @@ def main(args):
     for dataset in DATASETS:
         os.chdir(work_dir)
         exp = get_exp(args.exp_file, args.name, str("datasets/" + str(dataset) + "/"))
+        exp.test_size = (args.tsize, args.tsize)
         #map_score(dataset,args,os.getcwd())
         if args.demo == "image":
             path = str("datasets/" + str(dataset) + "/validate")

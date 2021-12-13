@@ -147,16 +147,15 @@ input
 <details>
 <summary>Evaluation</summary>
 
-**Step 1:** Then download the evaluation datasets from Azure (TODO: add path to checkpoints) and put them in the folder ``YOLOX-Bees/datasets/``.
+**Step 1:** Download the evaluation datasets from Azure (TODO: add path to checkpoints) and put them in the folder ``YOLOX-Bees/datasets/`` (we need it to create ground truth labels).
 
-**Step 2:** Open the file ``YOLOX-Bees/exps/default/yolox_bees_eval.py`` and modify ``self.depth`` and ``self.width`` based on the checkpoint you have downloaded ( yolox_x -> [1.33, 1.25] , yolox_l -> [1.0, 1.0] , yolox_m -> [0.67, 0.75] , yolo_s -> [0.33, 0.50]] )
-
-**Step 3:** Run the following command to obtain predictions for all the datasets
+**Step 2:** Run the following command to obtain predictions for all the datasets
 ```console
-python evaluation.py image -f exps/default/yolox_bees_eval.py -c checkpoints/YOUR_CHECKPOINT.pth --tsize 640 --save_result
+python evaluation_no_yolox.py image -f exps/default/yolox_bees_eval.py  --tsize 640
 ```
-**Step 4:**
-At the end you will find a file called ``mAP_results.txt`` together with an output file for each dataset in the folder ``YOLOX-Bees/map/output/``, while you will find images with bounding boxes predicted by the model in the folder ``YOLOX-Bees/YOLOX_outputs/yolox_bees_eval/``.
+
+**Step 3:**
+At the end you will find a file called ``mAP_results.txt`` together with an output file for each dataset in the folder ``YOLOX-Bees/map/output/``.
 
 </details>
 
