@@ -28,13 +28,22 @@ pip3 install cython; pip3 install 'git+https://github.com/cocodataset/cocoapi.gi
 <details>
 <summary>Training</summary>
 
-**Step 1:** Download a yolox checkpoint from Azure (TODO: add path to checkpoints) and put it in the folder ``YOLOX-Bees/checkpoints``. 
+**Step 1:** Download a yolox pre-trained checkpoint from the table below and put it in the folder ``YOLOX-Bees/checkpoints``.
+
+#### Standard Models.
+
+|Model |size |mAP<sup>val<br>0.5:0.95 |mAP<sup>test<br>0.5:0.95 | Speed V100<br>(ms) | Params<br>(M) |FLOPs<br>(G)| weights |
+| ------        |:---: | :---:    | :---:       |:---:     |:---:  | :---: | :----: |
+|[YOLOX-s](./exps/default/yolox_s.py)    |640  |40.5 |40.5      |9.8      |9.0 | 26.8 | [github](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_s.pth) |
+|[YOLOX-m](./exps/default/yolox_m.py)    |640  |46.9 |47.2      |12.3     |25.3 |73.8| [github](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_m.pth) |
+|[YOLOX-l](./exps/default/yolox_l.py)    |640  |49.7 |50.1      |14.5     |54.2| 155.6 | [github](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_l.pth) |
+|[YOLOX-x](./exps/default/yolox_x.py)   |640   |51.1 |**51.5**  | 17.3    |99.1 |281.9 | [github](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_x.pth) |
 
 **Step 2:** Based on the checkpoint you downloaded you will choose a different experiment file -> they are located in ``/YOLOX-Bees/exps/default/``.
 
-**Step 3:** Download from Azure the folder /path to add/bees_all and put it inside the folder ``YOLOX_Bees/datasets/``
+**Step 3:** Download from Azure the folder ``/TODO:path to add/bees_all`` and put it inside the folder ``YOLOX_Bees/datasets/``.
 
-**Step 4:** Run the following commando to train yolox using a single GPU(it can only be trained with GPUs)
+**Step 4:** Run the following command to train yolox using a single GPU(it can only be trained with GPUs)
 ```console
 python tools/train.py -f exps/default/YOUR_EXP_FILE.py -d 1 -b 4 --fp16 -o -c checkpoints/YOUR_CHECKPOINT.pth
 ```
@@ -55,9 +64,13 @@ bsub -W 24:00 -o log_test -R "rusage[mem=32000, ngpus_excl_p=1]" -R "select[gpu_
 <details>
 <summary>Evaluation</summary>
 
-**Step 1:**
+**Step 1:** Download a yolox checkpoint from Azure (TODO: add path to checkpoints) or use one checkpoint that you produced and put it in the folder ``YOLOX-Bees/checkpoints``. 
 
-TODO
+**Step 2:** Then download the evaluation datasets from Azure (TODO: add path to checkpoints) and put them in the folder ``YOLOX-Bees/datasets/``.
+
+**Step 3:** Open the file ``YOLOX-Bees/exps/default/yolox_bees_eval.py`` and modify ``self.depth`` and ``self.width`` based on the checkpoint you have downloaded ( yolox_x -> [1.33, 1.25] , yolox_l -> [1.0, 1.0] , yolox_m -> [0.67, 0.75] , yolo_s -> [0.33, 0.50]] )
+
+**Step 4:** Run
 
 </details>
 
