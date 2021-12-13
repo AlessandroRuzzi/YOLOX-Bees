@@ -39,7 +39,7 @@ pip3 install cython; pip3 install 'git+https://github.com/cocodataset/cocoapi.gi
 |[YOLOX-l](./exps/default/yolox_l.py)    |640  |49.7 |50.1      |14.5     |54.2| 155.6 | [github](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_l.pth) |
 |[YOLOX-x](./exps/default/yolox_x.py)   |640   |51.1 |**51.5**  | 17.3    |99.1 |281.9 | [github](https://github.com/Megvii-BaseDetection/YOLOX/releases/download/0.1.1rc0/yolox_x.pth) |
 
-**Step 2:** Based on the checkpoint you downloaded you will choose a different experiment file -> they are located in ``/YOLOX-Bees/exps/default/``.
+**Step 2:** Based on the checkpoint you downloaded you will choose a different experiment file. They are located in ``/YOLOX-Bees/exps/default/`` and you can choose between ``yolox_s, yolox_m, yolox_l and yolox_x``.
 
 **Step 3:** Download from Azure the folder ``/TODO:path to add/bees_all`` and put it inside the folder ``YOLOX_Bees/datasets/``.
 
@@ -70,8 +70,12 @@ bsub -W 24:00 -o log_test -R "rusage[mem=32000, ngpus_excl_p=1]" -R "select[gpu_
 
 **Step 3:** Open the file ``YOLOX-Bees/exps/default/yolox_bees_eval.py`` and modify ``self.depth`` and ``self.width`` based on the checkpoint you have downloaded ( yolox_x -> [1.33, 1.25] , yolox_l -> [1.0, 1.0] , yolox_m -> [0.67, 0.75] , yolo_s -> [0.33, 0.50]] )
 
-**Step 4:** Run
-
+**Step 4:** Run the following command to obtain predictions for all the datasets
+```console
+python evaluation.py image -f exps/default/yolox_bees_eval.py -c checkpoints/YOUR_CHECKPOINT.pth --tsize 640 --save_result
+```
+**Step 5:**
+At the end you will find a file called ``mAP_results`` together with an output file for each dataset in the folder ``YOLOX-Bees/map/output/``, while you will find images with bounding boxes predicted by the model in the folder ``YOLOX-Bees/YOLOX_outputs/yolox_bees_eval/``.
 </details>
 
 
