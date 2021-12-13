@@ -12,7 +12,7 @@ import numpy as np
 
 def map_score(dataset :str,args,path):
 
-    MINOVERLAP = 0.25 # default value (defined in the PASCAL VOC2012 challenge)
+    MINOVERLAP = 0.5 # default value (defined in the PASCAL VOC2012 challenge)
 
 
     '''
@@ -39,7 +39,6 @@ def map_score(dataset :str,args,path):
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     GT_PATH = str(str(path) + "/map/input/" + str(dataset) +  '/ground-truth')
-    print(GT_PATH)
     DR_PATH = str(str(path) + "/map/input/" + str(dataset) +  '/detection-results')
     # if there are no images then no animation can be shown
     IMG_PATH = os.path.join(os.getcwd(), 'input', 'images-optional')
@@ -720,7 +719,7 @@ def map_score(dataset :str,args,path):
 
         output_file.write("\n# mAP of all classes\n")
         mAP = sum_AP / n_classes
-        text = "mAP = {0:.2f}%".format(mAP*100)
+        text = "mAP " + str(dataset) + " = {0:.2f}%".format(mAP*100)
         output_file.write(text + "\n")
         print(text)
 
@@ -896,3 +895,5 @@ def map_score(dataset :str,args,path):
             plot_color,
             ""
             )
+    
+    return [dataset,"{0:.2f}%".format(mAP*100)]

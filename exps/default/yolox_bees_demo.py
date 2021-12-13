@@ -14,7 +14,7 @@ class Exp(MyExp):
         super(Exp, self).__init__()
         self.depth = 1.33
         self.width = 1.25
-        self.test_size = (1920, 1080)
+        #self.test_size = (1920, 1080)
         self.num_classes = 1
         self.data_dir = data_dir
         self.train_ann = "train.json"

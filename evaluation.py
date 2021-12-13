@@ -16,6 +16,7 @@ import cv2
 import numpy as np
 
 import torch
+from tabulate import tabulate
 
 from yolox.data.data_augment import ValTransform
 from yolox.data.datasets import COCO_CLASSES
@@ -24,7 +25,20 @@ from map.script.map import map_score
 
 IMAGE_EXT = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
 
-DATASETS = ["fro23"]
+DSLAB20 = []
+
+DATASETS = ["Hempbox",
+            "Chueried_Hive01",
+            "ClemensRed",
+            "Echolinde",
+            "Erlen_diago",
+            "Erlen_front",
+            "Erlen_smart",
+            "Erlen_Hive11",
+            "Froh14",
+            "Froh23",
+            "UnitedQueens",
+            "Doettingen_Hive1"]
 
 def get_exp_by_file(exp_file,data_dir):
     try:
@@ -230,6 +244,9 @@ class Predictor(object):
         ratio = img_info["ratio"]
         img = img_info["raw_img"]
         if output is None:
+            file_path = str("map/input/" + str(dataset) + "/detection-results/" + str(img_info["file_name"])[:-4] + ".txt")
+            f= open(file_path,"w+")
+            f.close()
             return img
         output = output.cpu()
 
@@ -272,7 +289,7 @@ class Predictor(object):
                 bboxes1.append([x1, y1, x2, y2])
             
             f.write(str(int(output[i,6].item())) + " " + str(output[i,5].item()) + " " + str(x1.item()) + " " + str(y1.item()) + " " + str(x2.item()) + " " + str(y2.item()) + "\n")
-
+        
         f.close()
 
         cls = output[:, 6]
@@ -359,74 +376,77 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
 
 
 def main(args):
-    for dataset in DATASETS:
-        exp = get_exp(args.exp_file, args.name, str("datasets/" + str(dataset) + "/"))
-        if not args.experiment_name:
-            args.experiment_name = exp.exp_name
+    table = []
+    exp = get_exp(args.exp_file, args.name, str("datasets/" + str(DATASETS[0]) + "/"))
+    if not args.experiment_name:
+        args.experiment_name = exp.exp_name
 
-        file_name = os.path.join(exp.output_dir, args.experiment_name)
-        os.makedirs(file_name, exist_ok=True)
+    file_name = os.path.join(exp.output_dir, args.experiment_name)
+    os.makedirs(file_name, exist_ok=True)
 
-        vis_folder = None
-        if args.save_result:
-            vis_folder = os.path.join(file_name, "vis_res")
-            os.makedirs(vis_folder, exist_ok=True)
+    vis_folder = None
+    if args.save_result:
+        vis_folder = os.path.join(file_name, "vis_res")
+        os.makedirs(vis_folder, exist_ok=True)
 
-        if args.trt:
-            args.device = "gpu"
+    if args.trt:
+        args.device = "gpu"
 
-        logger.info("Args: {}".format(args))
+    logger.info("Args: {}".format(args))
 
-        if args.conf is not None:
-            exp.test_conf = args.conf
-        if args.nms is not None:
-            exp.nmsthre = args.nms
-        if args.tsize is not None:
-            exp.test_size = (args.tsize, args.tsize)
+    if args.conf is not None:
+        exp.test_conf = args.conf
+    if args.nms is not None:
+        exp.nmsthre = args.nms
+    if args.tsize is not None:
+        exp.test_size = (args.tsize, args.tsize)
 
-        model = exp.get_model()
-        logger.info("Model Summary: {}".format(get_model_info(model, exp.test_size)))
+    model = exp.get_model()
+    logger.info("Model Summary: {}".format(get_model_info(model, exp.test_size)))
 
-        if args.device == "gpu":
-            model.cuda()
-            if args.fp16:
-                model.half()  # to FP16
-        model.eval()
+    if args.device == "gpu":
+        model.cuda()
+        if args.fp16:
+            model.half()  # to FP16
+    model.eval()
 
-        if not args.trt:
-            if args.ckpt is None:
-                ckpt_file = os.path.join(file_name, "best_ckpt.pth")
-            else:
-                ckpt_file = args.ckpt
-            logger.info("loading checkpoint")
-            ckpt = torch.load(ckpt_file, map_location="cpu")
-            # load the model state dict
-            model.load_state_dict(ckpt["model"])
-            logger.info("loaded checkpoint done.")
-
-        if args.fuse:
-            logger.info("\tFusing model...")
-            model = fuse_model(model)
-
-        if args.trt:
-            assert not args.fuse, "TensorRT model is not support model fusing!"
-            trt_file = os.path.join(file_name, "model_trt.pth")
-            assert os.path.exists(
-                trt_file
-            ), "TensorRT model is not found!\n Run python3 tools/trt.py first!"
-            model.head.decode_in_inference = False
-            decoder = model.head.decode_outputs
-            logger.info("Using TensorRT to inference")
+    if not args.trt:
+        if args.ckpt is None:
+            ckpt_file = os.path.join(file_name, "best_ckpt.pth")
         else:
-            trt_file = None
-            decoder = None
+            ckpt_file = args.ckpt
+        logger.info("loading checkpoint")
+        ckpt = torch.load(ckpt_file, map_location="cpu")
+        # load the model state dict
+        model.load_state_dict(ckpt["model"])
+        logger.info("loaded checkpoint done.")
 
-        predictor = Predictor(
-            model, exp, COCO_CLASSES, trt_file, decoder,
-            args.device, args.fp16, args.legacy,
-        )
-        current_time = time.localtime()
-        
+    if args.fuse:
+        logger.info("\tFusing model...")
+        model = fuse_model(model)
+
+    if args.trt:
+        assert not args.fuse, "TensorRT model is not support model fusing!"
+        trt_file = os.path.join(file_name, "model_trt.pth")
+        assert os.path.exists(
+            trt_file
+        ), "TensorRT model is not found!\n Run python3 tools/trt.py first!"
+        model.head.decode_in_inference = False
+        decoder = model.head.decode_outputs
+        logger.info("Using TensorRT to inference")
+    else:
+        trt_file = None
+        decoder = None
+
+    predictor = Predictor(
+        model, exp, COCO_CLASSES, trt_file, decoder,
+        args.device, args.fp16, args.legacy,
+    )
+    current_time = time.localtime()
+    work_dir = os.getcwd()
+    for dataset in DATASETS:
+        os.chdir(work_dir)
+        exp = get_exp(args.exp_file, args.name, str("datasets/" + str(dataset) + "/"))
         #map_score(dataset,args,os.getcwd())
         if args.demo == "image":
             path = str("datasets/" + str(dataset) + "/validate")
@@ -434,7 +454,13 @@ def main(args):
         elif args.demo == "video" or args.demo == "webcam":
             imageflow_demo(predictor, vis_folder, current_time, args)
         
-        map_score(dataset,args,os.getcwd())
+        table.append(map_score(dataset,args,work_dir))
+    os.chdir(work_dir)
+    print(tabulate(table, headers=["Dataset","mAP Score"]))
+    file_path = str("map/output/mAP_results.txt")
+    f= open(file_path,"w+")
+    f.write(tabulate(table, headers=["Dataset","mAP Score"]))
+    f.close()
 
 
 
