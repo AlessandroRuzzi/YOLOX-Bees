@@ -265,13 +265,6 @@ class Predictor(object):
 
         f= open(file_path,"w+")
         
-
-        val_loader = self.exp.get_eval_loader(
-            batch_size=4,
-            is_distributed=False,
-        )
-        #bboxes = []
-        
         #print(annotations/img_info["ratio"])
         bboxes1 = []
         for i,obj in enumerate(bboxes):

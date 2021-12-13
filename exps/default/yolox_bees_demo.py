@@ -12,8 +12,8 @@ from yolox.exp import get_exp
 class Exp(MyExp):
     def __init__(self, data_dir):
         super(Exp, self).__init__()
-        self.depth = 1.33
-        self.width = 1.25
+        self.depth = 1.00
+        self.width = 1.00
         #self.test_size = (1920, 1080)
         self.num_classes = 1
         self.data_dir = data_dir
