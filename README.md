@@ -88,12 +88,12 @@ At the end you will find a file called ``mAP_results.txt`` together with an outp
 **Step 2:** Use **matching names** for the files (e.g. image: "image_1.jpg", detection-results: "image_1.txt").
 
 **Step 3:** In these files, each line should be in the following format:
-```
+```console
     <class_name> <confidence> <left> <top> <right> <bottom>
 ```
 
 **Step 4:** E.g. "image_1.txt":
-```
+```console
     tvmonitor 0.471781 0 13 174 244
     cup 0.414941 274 226 301 265
     book 0.460851 429 219 528 247
@@ -105,7 +105,7 @@ At the end you will find a file called ``mAP_results.txt`` together with an outp
 To know all the datasets name you can refer to lines 30 - 41 of the file ``evaluation.py``.
 
 At the end the folder ``YOLOX-Bees/map/input/`` should have the following structure:
-```
+```console
 input
    |——————Chueried_Hive01
    |        └——————detection-results
