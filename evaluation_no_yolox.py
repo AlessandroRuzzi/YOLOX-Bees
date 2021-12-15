@@ -25,7 +25,7 @@ from map.script.map import map_score
 
 IMAGE_EXT = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
 
-DSLAB20 = []
+DSLAB20 = [31.78,98.08,88.51,98.26,97.46,99.61,97.26,98.26,95.94,94.08,99.93,97.50]
 
 DATASETS = ["Hempbox",
             "Chueried_Hive01",
@@ -340,7 +340,7 @@ def main(args):
 
     current_time = time.localtime()
     work_dir = os.getcwd()
-    for dataset in DATASETS:
+    for i,dataset in enumerate(DATASETS):
         os.chdir(work_dir)
         exp = get_exp(args.exp_file, args.name, str("datasets/" + str(dataset) + "/"))
         exp.test_size = (args.tsize, args.tsize)
@@ -348,12 +348,18 @@ def main(args):
             path = str("datasets/" + str(dataset) + "/validate")
             image_demo(exp,path, current_time, args.save_result,dataset,exp.test_size)
         
-        table.append(map_score(dataset,args,work_dir))
+        score = map_score(dataset,args,work_dir)
+        score.append(DSLAB20[i])
+        if(float(score[1][:-1]) > score[2]):
+            score.append("BETTER")
+        else:
+            score.append("WORSE")
+        table.append(score)
     os.chdir(work_dir)
-    print(tabulate(table, headers=["Dataset","mAP Score"]))
+    print(tabulate(table[:-1], headers=["Dataset","mAP Score","DSLab20","Comparison"]))
     file_path = str("map/output/mAP_results.txt")
     f= open(file_path,"w+")
-    f.write(tabulate(table, headers=["Dataset","mAP Score"]))
+    f.write(tabulate(table[:-1], headers=["Dataset","mAP Score","DSLab20","Comparison"]))
     f.close()
 
 

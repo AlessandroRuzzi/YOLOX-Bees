@@ -72,7 +72,7 @@ bsub -W 24:00 -o log_test -R "rusage[mem=32000, ngpus_excl_p=1]" -R "select[gpu_
 
 **Step 4:** Run the following command to obtain predictions for all the datasets
 ```console
-python evaluation.py image -f exps/default/yolox_bees_eval.py -c checkpoints/YOUR_CHECKPOINT.pth --tsize 640 --save_result
+python evaluation.py image -f exps/default/yolox_bees_eval.py -c checkpoints/YOUR_CHECKPOINT.pth --tsize 832 --save_result --conf 0.05 --nms 0.8
 ```
 **Step 5:**
 At the end you will find a file called ``mAP_results.txt`` together with an output file for each dataset in the folder ``YOLOX-Bees/map/output/``, while you will find images with bounding boxes predicted by the model in the folder ``YOLOX-Bees/YOLOX_outputs/yolox_bees_eval/``.
@@ -151,7 +151,7 @@ input
 
 **Step 2:** Run the following command to obtain predictions for all the datasets
 ```console
-python evaluation_no_yolox.py image -f exps/default/yolox_bees_eval.py  --tsize 640
+python evaluation_no_yolox.py image -f exps/default/yolox_bees_eval.py  --tsize 832
 ```
 
 **Step 3:**
