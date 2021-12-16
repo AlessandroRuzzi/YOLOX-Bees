@@ -40,28 +40,28 @@ class Exp(BaseExp):
         self.mosaic_prob = 1.0
         self.mixup_prob = 1.0
         self.hsv_prob = 1.0
-        self.flip_prob = 0.5
-        self.degrees = 10.0
-        self.translate = 0.1
-        self.mosaic_scale = (0.1, 2)
-        self.mixup_scale = (0.5, 1.5)
+        self.flip_prob = 0.55
+        self.degrees = 15.0
+        self.translate = 0.3
+        self.mosaic_scale = (0.1, 2.5)
+        self.mixup_scale = (0.3, 1.9)
         self.shear = 2.0
         self.enable_mixup = True
 
         # --------------  training config --------------------- #
-        self.warmup_epochs = 5
+        self.warmup_epochs = 3
         self.max_epoch = 300
         self.warmup_lr = 0
         self.basic_lr_per_img = 0.01 / 64.0
         self.scheduler = "yoloxwarmcos"
-        self.no_aug_epochs = 15
-        self.min_lr_ratio = 0.05
+        self.no_aug_epochs = 10
+        self.min_lr_ratio = 0.01
         self.ema = True
 
         self.weight_decay = 5e-4
-        self.momentum = 0.9
+        self.momentum = 0.949
         self.print_interval = 10
-        self.eval_interval = 10
+        self.eval_interval = 5
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
 
         # -----------------  testing config ------------------ #
