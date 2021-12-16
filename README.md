@@ -184,7 +184,7 @@ module load eth_proxy gcc/6.3.0 python_gpu/3.8.5
 ```
 
 **Step 3:**
-To move files from your PC to Euler or viceversa you can use [scp command](https://scicomp.ethz.ch/wiki/Storage_and_data_transfer).
+To move files from your PC to Euler or vice-versa you can use [scp command](https://scicomp.ethz.ch/wiki/Storage_and_data_transfer).
 
 **Step 4:**
 Go to the section [How to reproduce results](#How-to-reproduce-results) and follow the instructions.
