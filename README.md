@@ -1,10 +1,20 @@
 <div align="center"><img src="assets/logo.png" width="350"></div>
 <img src="assets/demo.png" >
 
+# Table of Contents
+- [Report](#Report)
+- [How to reproduce results](#How-to-reproduce-results)
+- [How to evaluate a model different from yolox](#How-to-evaluate-a-model-different-from-yolox)
+- [How to setup Euler](#How-to-setup-Euler)
+- [Euler commands](#Leonhard-commands)
+
+
+# Report
+
+TODO
+
 # How to reproduce results
 
-
-## Quick Start
 
 <details>
 <summary>Installation</summary>
@@ -41,7 +51,7 @@ pip3 install cython; pip3 install 'git+https://github.com/cocodataset/cocoapi.gi
 
 **Step 2:** Based on the checkpoint you downloaded you will choose a different experiment file. They are located in ``/YOLOX-Bees/exps/default/`` and you can choose between ``yolox_s``, ``yolox_m``, ``yolox_l`` and ``yolox_x``.
 
-**Step 3:** Download from Azure the folder ``/TODO:path to add/bees_all`` and put it inside the folder ``YOLOX_Bees/datasets/``.
+**Step 3:** Download from Azure the zip file ``/beelivingsensor/dslab2021/dslab2020_bee_detection_data_blurred/reproduce_results_dataset.zip``, unzip it and put all the folders inside the folder ``YOLOX_Bees/datasets/``.
 
 **Step 4:** Run the following command to train yolox using a single GPU(it can only be trained with GPUs)
 ```console
@@ -64,9 +74,9 @@ bsub -W 24:00 -o log_test -R "rusage[mem=32000, ngpus_excl_p=1]" -R "select[gpu_
 <details>
 <summary>Evaluation</summary>
 
-**Step 1:** Download a yolox checkpoint from Azure (TODO: add path to checkpoints) or use one checkpoint that you produced and put it in the folder ``YOLOX-Bees/checkpoints``. 
+**Step 1:** Download a yolox checkpoint from Azure ``/beelivingsensor/dslab2021/dslab2020_bee_detection_data_blurred/best_ckpt_yolox_l.pth`` or use one checkpoint that you produced and put it in the folder ``YOLOX-Bees/checkpoints/``. 
 
-**Step 2:** Then download the evaluation datasets from Azure (TODO: add path to checkpoints) and put them in the folder ``YOLOX-Bees/datasets/``.
+**Step 2:** Then if you haven't already done it, download from Azure the zip file ``/beelivingsensor/dslab2021/dslab2020_bee_detection_data_blurred/reproduce_results_dataset.zip``, unzip it and put all the folders inside the folder ``YOLOX_Bees/datasets/``.
 
 **Step 3:** Open the file ``YOLOX-Bees/exps/default/yolox_bees_eval.py`` and modify ``self.depth`` and ``self.width`` based on the checkpoint you have downloaded ( yolox_x -> [1.33, 1.25] , yolox_l -> [1.0, 1.0] , yolox_m -> [0.67, 0.75] , yolo_s -> [0.33, 0.50]] )
 
@@ -147,7 +157,7 @@ input
 <details>
 <summary>Evaluation</summary>
 
-**Step 1:** Download the evaluation datasets from Azure (TODO: add path to checkpoints) and put them in the folder ``YOLOX-Bees/datasets/`` (we need it to create ground truth labels).
+**Step 1:** download from Azure the zip file ``/beelivingsensor/dslab2021/dslab2020_bee_detection_data_blurred/reproduce_results_dataset.zip``, unzip it and put all the folders inside the folder ``YOLOX_Bees/datasets/``.(we need them to create ground truth labels).
 
 **Step 2:** Run the following command to obtain predictions for all the datasets
 ```console
@@ -158,6 +168,48 @@ python evaluation_no_yolox.py image -f exps/default/yolox_bees_eval.py  --tsize 
 At the end you will find a file called ``mAP_results.txt`` together with an output file for each dataset in the folder ``YOLOX-Bees/map/output/``.
 
 </details>
+
+# How to setup Euler
+
+**Step 1:** To login open the terminal and run the following command (you must use ETH VPN):
+
+```console
+ ssh ETH_USERNAME@euler.ethz.ch
+```
+
+**Step 2:** Run the following command in order to install modules:
+```console
+env2lmod
+module load eth_proxy gcc/6.3.0 python_gpu/3.8.5
+```
+
+**Step 3:**
+To move files from your PC to Euler or viceversa you can use [scp command](https://scicomp.ethz.ch/wiki/Storage_and_data_transfer).
+
+**Step 4:**
+Go to the section [How to reproduce results](#How-to-reproduce-results) and follow the instructions.
+
+# Euler commands
+
+1 ``bpeek`` -> Use bpeek to check the output of the job you are interested in:
+```console
+bpeek jobID
+```
+
+2 ``bkill`` -> Use bkill to kill a specific job:
+```console
+bkill jobID
+```
+
+3 ``bjobs`` -> Use bjobs to check all your active/pending jobs:
+```console
+bjobs 
+```
+
+4 ``vim log_test`` -> Use this command to check the log/errors of a completed/interrupted job:
+```console
+vim log_test
+```
 
 # Deployment
 
