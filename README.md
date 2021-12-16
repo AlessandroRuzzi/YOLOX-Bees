@@ -6,7 +6,7 @@
 - [How to reproduce results](#How-to-reproduce-results)
 - [How to evaluate a model different from yolox](#How-to-evaluate-a-model-different-from-yolox)
 - [How to setup Euler](#How-to-setup-Euler)
-- [Euler commands](#Leonhard-commands)
+- [Euler commands](#Euler-commands)
 
 
 # Report
