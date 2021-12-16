@@ -53,7 +53,7 @@ pip3 install cython; pip3 install 'git+https://github.com/cocodataset/cocoapi.gi
 
 **Step 3:** Download from Azure the zip file ``/beelivingsensor/dslab2021/dslab2020_bee_detection_data_blurred/reproduce_results_dataset.zip``, unzip it and put all the folders inside the folder ``YOLOX_Bees/datasets/``.
 
-**Step 4:** Run the following command to train yolox using a single GPU(it can only be trained with GPUs)
+**Step 4:** Run the following command to train yolox using a single GPU (it can only be trained with GPUs)
 ```console
 python tools/train.py -f exps/default/YOUR_EXP_FILE.py -d 1 -b 4 --fp16 -o -c checkpoints/YOUR_CHECKPOINT.pth
 ```
@@ -66,7 +66,7 @@ bsub -W 24:00 -o log_test -R "rusage[mem=32000, ngpus_excl_p=1]" -R "select[gpu_
 * -b: total batch size, the recommended number for -b is num-gpu * 8
 * --fp16: mixed precision training 
 
-**Step 5:** Once the train ends you will find in the folder ``/YOLOX-Bees/YOLOX_outputs/YOUR_EXP_NAME/`` the best checkpoint (evaluated on the validation set) and the last epoch checkpoint.
+**Step 5:** Once the train ends (around 80/100 epochs should be enough) you will find in the folder ``/YOLOX-Bees/YOLOX_outputs/YOUR_EXP_NAME/`` the best checkpoint (evaluated on the validation set) and the last epoch checkpoint.
 
 </details>
 
@@ -157,7 +157,7 @@ input
 <details>
 <summary>Evaluation</summary>
 
-**Step 1:** download from Azure the zip file ``/beelivingsensor/dslab2021/dslab2020_bee_detection_data_blurred/reproduce_results_dataset.zip``, unzip it and put all the folders inside the folder ``YOLOX_Bees/datasets/``.(we need them to create ground truth labels).
+**Step 1:** Download from Azure the zip file ``/beelivingsensor/dslab2021/dslab2020_bee_detection_data_blurred/reproduce_results_dataset.zip``, unzip it and put all the folders inside the folder ``YOLOX_Bees/datasets/``.(we need them to create ground truth labels).
 
 **Step 2:** Run the following command to obtain predictions for all the datasets
 ```console
